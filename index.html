@@ -5,41 +5,196 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Güvenlik Kayıt Sistemi</title>
 <style>
-  body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin:0; padding:20px; color:#333; }
-  h1 { text-align:center; color:#004d99; margin-bottom:40px; }
-  #totalCount { position:fixed; top:6px; left:6px; font-weight:600; font-size:12px; color:#004d99; background:#d9e7ff; padding:4px 8px; border-radius:4px; box-shadow:0 0 4px rgba(0,77,153,0.2); user-select:none; z-index:10001; }
-  #exportContainer { position:fixed; top:10px; right:10px; display:flex; gap:6px; z-index:10001; }
-  #exportContainer button { background:#006699; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:12px; box-shadow:0 1px 3px rgba(0,0,0,0.2); min-width:80px; }
-  #exportContainer button:hover { background:#004466; }
-  #searchInput { max-width:550px; margin:0 auto 20px; display:inline-block; padding:12px 15px; font-size:18px; border-radius:5px; border:1px solid #ccc; }
-  #voiceSearchBtn, #plateScanBtn { padding:12px 15px; font-size:18px; border-radius:5px; border:1px solid #ccc; cursor:pointer; background:#006699; color:white; margin-left:5px; }
-  #voiceSearchBtn:hover, #plateScanBtn:hover { background:#004466; }
-  table { width:100%; max-width:600px; margin:0 auto; border-collapse:collapse; background:white; box-shadow:0 0 8px rgba(0,0,0,0.1); border-radius:8px; overflow:hidden; }
-  th, td { padding:14px 16px; border-bottom:1px solid #ddd; text-align:left; }
-  th { background:#004d99; color:white; }
-  tr:hover { background:#f5faff; }
-  #noResults { text-align:center; margin-top:20px; color:#666; }
-  #buttonContainer { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:10000; }
-  #buttonContainer button { background:#006699; color:white; border:none; padding:6px 10px; font-size:12px; border-radius:4px; cursor:pointer; user-select:none; min-width:80px; box-shadow:0 1px 3px rgba(0,0,0,0.2); transition:background-color 0.25s ease; }
-  #buttonContainer button:hover { background:#004466; }
-  #deleteAllBtn { background-color:#dc3545 !important; color:white !important; }
-  #deleteAllBtn:hover { background-color:#b52a37 !important; }
-  .modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:20px 25px 25px; box-shadow:0 0 15px rgba(0,0,0,0.3); border-radius:12px; z-index:11000; width:320px; animation:fadeIn 0.3s; }
-  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-  .modal input { width:100%; margin:7px 0 12px; padding:10px 12px; font-size:15px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; }
-  .modal button { margin-top:5px; padding:10px; width:100%; background:#004d99; color:white; border:none; border-radius:6px; cursor:pointer; font-size:15px; }
-  .modal button:hover { background:#003366; }
-  .closeBtn { background:#dc3545 !important; margin-top:10px; }
-  #deleteRecord { background:#ff8800 !important; }
-  .editBtn { cursor:pointer; color:#004d99; font-weight:700; user-select:none; font-size:18px; }
-  .editBtn:hover { color:#002244; }
-
-  /* Kamera modal */
-  #cameraModal { width:360px; }
-  #videoContainer { position:relative; width:100%; padding-top:75%; background:#000; }
-  #videoContainer video { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; border-radius:8px; }
-  #scanFrame { position:absolute; border:3px solid red; width:60%; height:25%; top:37%; left:20%; box-sizing:border-box; pointer-events:none; }
-  #takePhotoBtn { margin-top:10px; background:#006699; color:white; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f0f2f5;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+  }
+  h1 {
+    text-align: center;
+    color: #004d99;
+    margin-bottom: 40px;
+  }
+  #totalCount {
+    position: fixed;
+    top: 6px;
+    left: 6px;
+    font-weight: 600;
+    font-size: 12px;
+    color: #004d99;
+    background: #d9e7ff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    box-shadow: 0 0 4px rgba(0, 77, 153, 0.2);
+    user-select: none;
+    z-index: 10001;
+  }
+  /* Küçük içe/dışa aktar butonları */
+  #exportContainer {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 6px;
+    z-index: 10001;
+  }
+  #exportContainer button {
+    background: #006699;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    min-width: 80px;
+  }
+  #exportContainer button:hover {
+    background: #004466;
+  }
+  #searchInput {
+    max-width: 550px;
+    margin: 0 auto 20px;
+    display: inline-block;
+    padding: 12px 15px;
+    font-size: 18px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+  #voiceSearchBtn {
+    padding: 12px 15px;
+    font-size: 18px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    background: #006699;
+    color: white;
+    margin-left: 5px;
+  }
+  #voiceSearchBtn:hover {
+    background: #004466;
+  }
+  table {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  th,
+  td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+  }
+  th {
+    background: #004d99;
+    color: white;
+  }
+  tr:hover {
+    background: #f5faff;
+  }
+  #noResults {
+    text-align: center;
+    margin-top: 20px;
+    color: #666;
+  }
+  #buttonContainer {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10000;
+  }
+  #buttonContainer button {
+    background: #006699;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    min-width: 80px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.25s ease;
+  }
+  #buttonContainer button:hover {
+    background: #004466;
+  }
+  /* Kayıtları Sil butonu kırmızı */
+  #deleteAllBtn {
+    background-color: #dc3545 !important;
+    color: white !important;
+  }
+  #deleteAllBtn:hover {
+    background-color: #b52a37 !important;
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px 25px 25px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    z-index: 11000;
+    width: 320px;
+    animation: fadeIn 0.3s;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .modal input {
+    width: 100%;
+    margin: 7px 0 12px;
+    padding: 10px 12px;
+    font-size: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+  }
+  .modal button {
+    margin-top: 5px;
+    padding: 10px;
+    width: 100%;
+    background: #004d99;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+  }
+  .closeBtn {
+    background: #dc3545 !important;
+    margin-top: 10px;
+  }
+  #deleteRecord {
+    background: #ff8800 !important;
+  }
+  .editBtn {
+    cursor: pointer;
+    color: #004d99;
+    font-weight: 700;
+    user-select: none;
+    font-size: 18px;
+  }
+  .editBtn:hover {
+    color: #002244;
+  }
+  /* Kamera modal stil */
+  #cameraModal video { width:100%; border-radius:8px; }
+  #cameraModal div { border:2px solid red; position:absolute; width:60%; height:20%; top:40%; left:20%; pointer-events:none; }
 </style>
 </head>
 <body>
@@ -52,10 +207,15 @@
   <input type="file" id="importFile" accept=".json" style="display:none" />
 </div>
 
+<!-- Arama ve sesli arama -->
 <div style="text-align:center; margin-bottom:20px;">
   <input type="text" id="searchInput" placeholder="Blok, Daire, İsim veya Plaka ile ara..." />
   <button id="voiceSearchBtn" title="Sesli Ara">🎙️</button>
-  <button id="plateScanBtn" title="Plaka Tara">📷</button>
+</div>
+
+<!-- Kamera ile plaka arama butonu -->
+<div style="text-align:center; margin-bottom:20px;">
+  <button id="cameraBtn">Plaka Fotoğrafı Çek</button>
 </div>
 
 <table id="recordTable">
@@ -70,7 +230,7 @@
   </thead>
   <tbody></tbody>
 </table>
-<p id="noResults" style="display:none">Kayıt bulunamadı.</p>
+<p id="noResults" style="display: none">Kayıt bulunamadı.</p>
 
 <div id="buttonContainer">
   <button id="allRecordsBtn">Tüm Kayıtlar</button>
@@ -78,6 +238,7 @@
   <button id="deleteAllBtn">Kayıtları Sil</button>
 </div>
 
+<!-- Admin Panel -->
 <div id="adminPanel" class="modal">
   <h3 id="adminPanelTitle">Yeni Kayıt Ekle</h3>
   <input type="text" id="blok" placeholder="Blok (örn: C)" />
@@ -85,10 +246,11 @@
   <input type="text" id="isim" placeholder="İsim" />
   <input type="text" id="plaka" placeholder="Plaka (opsiyonel)" />
   <button id="saveRecord">Kaydet</button>
-  <button id="deleteRecord" class="closeBtn" style="display:none">Sil</button>
+  <button id="deleteRecord" class="closeBtn" style="display: none">Sil</button>
   <button class="closeBtn" onclick="closeAdminPanel()">Kapat</button>
 </div>
 
+<!-- Şifre Paneli -->
 <div id="passwordPanel" class="modal">
   <h3 id="passTitle">Şifre Girişi</h3>
   <input type="password" id="passwordInput" placeholder="Şifre" autocomplete="new-password" />
@@ -96,18 +258,18 @@
   <button class="closeBtn" onclick="closePasswordPanel()">Kapat</button>
 </div>
 
-<!-- Kamera modal -->
-<div id="cameraModal" class="modal">
-  <h3>Plaka Tara</h3>
-  <div id="videoContainer">
-    <video id="video" autoplay></video>
-    <div id="scanFrame"></div>
+<!-- Kamera Modal -->
+<div id="cameraModal" class="modal" style="width:auto; max-width: 90%;">
+  <video id="video" autoplay></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <div style="text-align:center; margin-top:10px;">
+    <button id="snapBtn">Fotoğraf Çek</button>
+    <button class="closeBtn" onclick="closeCamera()">Kapat</button>
   </div>
-  <button id="takePhotoBtn">Foto Çek ve Tara</button>
-  <button class="closeBtn" onclick="closeCameraModal()">Kapat</button>
+  <div style="position:absolute; border: 2px solid red; width:60%; height:20%; top:40%; left:20%; pointer-events:none;"></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
 <script>
 let records = JSON.parse(localStorage.getItem("guvenlikRecords") || "[]");
 let savedPassword = localStorage.getItem("adminPassword") || "";
@@ -132,67 +294,67 @@ const passwordSubmit = document.getElementById("passwordSubmit");
 let editingIndex = null;
 let showingAll = false;
 
-// Kamera
-const plateScanBtn = document.getElementById("plateScanBtn");
-const cameraModal = document.getElementById("cameraModal");
-const video = document.getElementById("video");
-const takePhotoBtn = document.getElementById("takePhotoBtn");
-let stream = null;
-
-function updateTotalCount(){ totalCountDiv.textContent = `Toplam Kayıt: ${records.length}`; }
-function renderTable(data){
-  tableBody.innerHTML="";
-  if(data.length===0){ noResults.style.display=searchInput.value.trim()?"block":"none"; return; }
-  noResults.style.display="none";
+function updateTotalCount() { totalCountDiv.textContent = `Toplam Kayıt: ${records.length}`; }
+function renderTable(data) {
+  tableBody.innerHTML = "";
+  if(data.length===0){ noResults.style.display = searchInput.value.trim() ? "block" : "none"; return; }
+  noResults.style.display = "none";
   data.forEach((rec,i)=>{
-    const tr=document.createElement("tr");
+    const tr = document.createElement("tr");
     tr.innerHTML=`<td>${rec.blok}</td><td>${rec.daire}</td><td>${rec.isim}</td><td>${rec.plaka||""}</td><td><span class="editBtn" data-index="${i}">&#9998;</span></td>`;
     tableBody.appendChild(tr);
   });
 }
-
-// Smart search
 function smartSearch(query){
   query=query.trim().toLowerCase();
   if(!query) return [];
   return records.filter(r=>{
     const full=(r.blok+r.daire).toLowerCase();
-    return r.blok.toLowerCase().includes(query)||r.daire.toLowerCase().includes(query)||full.includes(query)||r.isim.toLowerCase().includes(query)||(r.plaka && r.plaka.toLowerCase().includes(query));
+    return r.blok.toLowerCase().includes(query)||
+           r.daire.toLowerCase().includes(query)||
+           full.includes(query)||
+           r.isim.toLowerCase().includes(query)||
+           (r.plaka && r.plaka.toLowerCase().includes(query));
   });
 }
 searchInput.addEventListener("input", e=>renderTable(smartSearch(e.target.value)));
 
-// Voice search
-const voiceSearchBtn=document.getElementById("voiceSearchBtn");
+// SESLİ ARAMA
+const voiceSearchBtn = document.getElementById("voiceSearchBtn");
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 if(SpeechRecognition){
   const recognition = new SpeechRecognition();
   recognition.lang="tr-TR"; recognition.interimResults=false;
-  voiceSearchBtn.addEventListener("click",()=>{ recognition.start(); });
-  recognition.addEventListener("result", (event)=>{
-    const spokenText=event.results[0][0].transcript;
-    searchInput.value=spokenText; renderTable(smartSearch(spokenText));
+  voiceSearchBtn.addEventListener("click", ()=>recognition.start());
+  recognition.addEventListener("result", event=>{
+    const spokenText = event.results[0][0].transcript;
+    searchInput.value = spokenText;
+    renderTable(smartSearch(spokenText));
   });
-  recognition.addEventListener("error",(e)=>{ alert("Sesli arama çalışmadı: "+e.error); });
+  recognition.addEventListener("error", e=>alert("Sesli arama çalışmadı: "+e.error));
 }else{ voiceSearchBtn.disabled=true; voiceSearchBtn.title="Tarayıcınız sesli aramayı desteklemiyor."; }
 
-// Password
+// Şifre ve admin
 function askPassword(callback){
-  passwordInput.value=""; passwordPanel.style.display="block";
+  passwordInput.value="";
+  passwordPanel.style.display="block";
   passwordSubmit.onclick=()=>{
     if(!savedPassword){
       savedPassword=passwordInput.value;
       if(!savedPassword) return alert("Şifre boş olamaz!");
-      localStorage.setItem("adminPassword",savedPassword); passwordPanel.style.display="none"; callback();
+      localStorage.setItem("adminPassword",savedPassword);
+      passwordPanel.style.display="none";
+      callback();
     }else{
-      if(passwordInput.value===savedPassword){ passwordPanel.style.display="none"; callback(); }
-      else alert("Hatalı şifre!");
+      if(passwordInput.value===savedPassword){
+        passwordPanel.style.display="none";
+        callback();
+      }else alert("Hatalı şifre!");
     }
   };
 }
 function closePasswordPanel(){ passwordPanel.style.display="none"; }
 
-// All records
 allRecordsBtn.addEventListener("click",()=>askPassword(()=>{
   showingAll=!showingAll;
   allRecordsBtn.textContent=showingAll?"Sorgu Ekranını Gizle":"Tüm Kayıtlar";
@@ -200,104 +362,139 @@ allRecordsBtn.addEventListener("click",()=>askPassword(()=>{
   renderTable(showingAll?records:[]);
   noResults.style.display=showingAll && records.length===0?"block":"none";
 }));
-
-// Admin panel
 adminBtn.addEventListener("click",()=>askPassword(()=>openAdminPanel()));
+
 function openAdminPanel(edit=false){
   adminPanel.style.display="block";
   if(edit && editingIndex!==null){
     const rec=records[editingIndex];
-    blokInput.value=rec.blok; daireInput.value=rec.daire; isimInput.value=rec.isim; plakaInput.value=rec.plaka||"";
+    blokInput.value=rec.blok;
+    daireInput.value=rec.daire;
+    isimInput.value=rec.isim;
+    plakaInput.value=rec.plaka||"";
     deleteBtn.style.display="block";
-  }else{ blokInput.value=daireInput.value=isimInput.value=plakaInput.value=""; editingIndex=null; deleteBtn.style.display="none"; }
+  }else{
+    blokInput.value=daireInput.value=isimInput.value=plakaInput.value="";
+    editingIndex=null;
+    deleteBtn.style.display="none";
+  }
 }
 function closeAdminPanel(){ adminPanel.style.display="none"; }
+
 saveBtn.addEventListener("click",()=>{
   const blok=blokInput.value.trim(), daire=daireInput.value.trim(), isim=isimInput.value.trim(), plaka=plakaInput.value.trim();
-  if(!blok || !daire || !isim) return alert("Blok, Daire ve İsim boş olamaz.");
+  if(!blok||!daire||!isim) return alert("Blok, Daire ve İsim boş olamaz.");
   if(editingIndex!==null){ records[editingIndex]={blok,daire,isim,plaka}; editingIndex=null; }
   else records.push({blok,daire,isim,plaka});
   localStorage.setItem("guvenlikRecords",JSON.stringify(records));
-  updateTotalCount(); renderTable([]); closeAdminPanel(); alert("Kayıt kaydedildi.");
+  updateTotalCount();
+  renderTable([]);
+  closeAdminPanel();
+  alert("Kayıt kaydedildi.");
 });
 deleteBtn.addEventListener("click",()=>{
   if(editingIndex!==null && confirm("Bu kaydı silmek istiyor musunuz?")){
     records.splice(editingIndex,1);
     localStorage.setItem("guvenlikRecords",JSON.stringify(records));
-    updateTotalCount(); renderTable([]); closeAdminPanel(); alert("Kayıt silindi."); editingIndex=null;
+    updateTotalCount();
+    renderTable([]);
+    closeAdminPanel();
+    alert("Kayıt silindi.");
+    editingIndex=null;
   }
 });
-tableBody.addEventListener("click",(e)=>{
+tableBody.addEventListener("click",e=>{
   if(e.target.classList.contains("editBtn")){
-    editingIndex=Number(e.target.getAttribute("data-index")); askPassword(()=>openAdminPanel(true));
+    editingIndex=Number(e.target.getAttribute("data-index"));
+    askPassword(()=>openAdminPanel(true));
   }
 });
 
-// Export/Import
+// Dışa / İçe Aktar
 document.getElementById("exportBtn").addEventListener("click",()=>askPassword(()=>{
   const blob=new Blob([JSON.stringify(records)],{type:"application/json"});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url; a.download=`guvenlik_kayitlari_${new Date().toISOString().slice(0,10)}.json`;
+  const a=document.createElement("a"); a.href=url;
+  a.download=`guvenlik_kayitlari_${new Date().toISOString().slice(0,10)}.json`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }));
 document.getElementById("importBtn").addEventListener("click",()=>askPassword(()=>importFile.click()));
-importFile.addEventListener("change",(e)=>{
+importFile.addEventListener("change", e=>{
   const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=(evt)=>{
+  reader.onload=evt=>{
     try{
       const imported=JSON.parse(evt.target.result);
-      if(Array.isArray(imported)){ records=imported; localStorage.setItem("guvenlikRecords",JSON.stringify(records)); updateTotalCount(); renderTable([]); alert("Kayıtlar başarıyla içe aktarıldı."); }
-      else alert("Geçersiz dosya.");
+      if(Array.isArray(imported)){
+        records=imported;
+        localStorage.setItem("guvenlikRecords",JSON.stringify(records));
+        updateTotalCount();
+        renderTable([]);
+        alert("Kayıtlar başarıyla içe aktarıldı.");
+      }else alert("Geçersiz dosya.");
     }catch(err){ alert("Dosya okunamadı: "+err.message); }
   };
   reader.readAsText(file);
 });
 
-// Delete all
+// Tüm kayıtları sil
 deleteAllBtn.addEventListener("click",()=>askPassword(()=>{
   const botCheck=prompt("Lütfen 'Ben robot değilim' yazınız:");
   if(botCheck && botCheck.trim().toLowerCase()==="ben robot değilim"){
-    if(confirm("Tüm kayıtları silmek istediğinize emin misiniz?")){ records=[]; localStorage.setItem("guvenlikRecords",JSON.stringify(records)); updateTotalCount(); renderTable([]); alert("Tüm kayıtlar silindi."); }
-  }else alert("Bot doğrulaması başarısız!");
+    if(confirm("Tüm kayıtları silmek istediğinize emin misiniz?")){
+      records=[]; localStorage.setItem("guvenlikRecords",JSON.stringify(records));
+      updateTotalCount(); renderTable([]);
+      alert("Tüm kayıtlar silindi.");
+    }
+  }else alert("Onaylama başarısız.");
 }));
 
-updateTotalCount(); renderTable([]);
+// İlk render
+updateTotalCount();
+renderTable([]);
 
-// --- Plaka Tara --- 
-plateScanBtn.addEventListener("click",()=>{
-  cameraModal.style.display="block";
-  if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
-    navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})
-    .then(s=>{
-      stream=s; video.srcObject=stream;
-    }).catch(err=>alert("Kamera açılamadı: "+err.message));
-  }else alert("Tarayıcınız kamera erişimini desteklemiyor.");
+// ===================== Kamera OCR =====================
+const cameraBtn = document.getElementById("cameraBtn");
+const cameraModal = document.getElementById("cameraModal");
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const snapBtn = document.getElementById("snapBtn");
+
+cameraBtn.addEventListener("click", async () => {
+  cameraModal.style.display = "block";
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    video.srcObject = stream;
+  } catch(err) { alert("Kamera açılamadı: "+err); }
 });
 
-function closeCameraModal(){
-  cameraModal.style.display="none";
-  if(stream){ stream.getTracks().forEach(track=>track.stop()); stream=null; }
-}
+snapBtn.addEventListener("click", () => {
+  const context = canvas.getContext("2d");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-// Foto çek ve OCR
-takePhotoBtn.addEventListener("click", ()=>{
-  const canvas=document.createElement("canvas");
-  const vRect = video.getBoundingClientRect();
-  const frame = document.getElementById("scanFrame").getBoundingClientRect();
-  const scaleX = video.videoWidth / vRect.width;
-  const scaleY = video.videoHeight / vRect.height;
-  canvas.width = frame.width * scaleX;
-  canvas.height = frame.height * scaleY;
-  const ctx=canvas.getContext("2d");
-  ctx.drawImage(video, (frame.left - vRect.left)*scaleX, (frame.top - vRect.top)*scaleY, frame.width*scaleX, frame.height*scaleY, 0,0,canvas.width,canvas.height);
-  Tesseract.recognize(canvas, 'eng', { logger: m=>console.log(m) }).then(({data:{text}})=>{
-    const plate=text.replace(/\s/g,'').toUpperCase();
-    if(plate){ searchInput.value=plate; renderTable(smartSearch(plate)); closeCameraModal(); }
-    else alert("Plaka okunamadı, tekrar deneyin.");
+  Tesseract.recognize(
+    canvas,
+    'tur',
+    { logger: m => console.log(m) }
+  ).then(({ data: { text } }) => {
+    const plaka = text.replace(/\s/g,'').toUpperCase();
+    if(plaka){
+      searchInput.value = plaka;
+      renderTable(smartSearch(plaka));
+      alert("Plaka tanındı: " + plaka);
+    } else alert("Plaka okunamadı, tekrar deneyin.");
+    closeCamera();
   });
 });
+
+function closeCamera(){
+  cameraModal.style.display = "none";
+  const stream = video.srcObject;
+  if(stream){ stream.getTracks().forEach(track=>track.stop()); }
+  video.srcObject = null;
+}
 </script>
 </body>
 </html>
