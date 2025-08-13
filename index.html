@@ -35,7 +35,7 @@
   .editBtn:hover { color:#002244; }
   /* Kamera Modal */
   #cameraModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:10px; border-radius:8px; z-index:12000; box-shadow:0 0 15px rgba(0,0,0,0.3); }
-  #cameraModal video { width:100%; border-radius:6px; }
+  #cameraModal video, #cameraModal img { width:100%; border-radius:6px; }
   #cameraModal .overlay { position:absolute; top:40%; left:10%; width:80%; height:20%; border:2px solid red; pointer-events:none; box-sizing:border-box; }
   #cameraModal button { margin-top:8px; background:#006699; color:white; border:none; padding:8px; width:100%; border-radius:6px; cursor:pointer; font-size:14px; }
   #cameraModal button:hover { background:#004466; }
@@ -95,10 +95,10 @@
   <button class="closeBtn" onclick="closePasswordPanel()">Kapat</button>
 </div>
 
-<!-- Kamera Modal -->
 <div id="cameraModal" class="modal">
   <div style="position:relative;">
     <video autoplay></video>
+    <img style="display:none;" />
     <div class="overlay"></div>
   </div>
   <button id="takePhotoBtn">Fotoğraf Çek</button>
@@ -130,16 +130,31 @@ const passwordSubmit = document.getElementById("passwordSubmit");
 let editingIndex = null;
 let showingAll = false;
 
-function updateTotalCount(){ totalCountDiv.textContent=`Toplam Kayıt: ${records.length}`; }
-function renderTable(data){ tableBody.innerHTML=""; if(data.length===0){ noResults.style.display=searchInput.value.trim()?"block":"none"; return; } noResults.style.display="none"; data.forEach((rec,i)=>{ const tr=document.createElement("tr"); tr.innerHTML=`<td>${rec.blok}</td><td>${rec.daire}</td><td>${rec.isim}</td><td>${rec.plaka||""}</td><td><span class="editBtn" data-index="${i}">&#9998;</span></td>`; tableBody.appendChild(tr); }); }
-
-function smartSearch(query){ query=query.trim().toLowerCase(); if(!query)return[]; return records.filter(r=>{ const full=(r.blok+r.daire).toLowerCase(); return r.blok.toLowerCase().includes(query)|| r.daire.toLowerCase().includes(query)|| full.includes(query)|| r.isim.toLowerCase().includes(query)|| (r.plaka&&r.plaka.toLowerCase().includes(query)); }); }
-
+// Table
+function updateTotalCount() { totalCountDiv.textContent = `Toplam Kayıt: ${records.length}`; }
+function renderTable(data){
+  tableBody.innerHTML="";
+  if(data.length===0){ noResults.style.display=searchInput.value.trim()?"block":"none"; return; }
+  noResults.style.display="none";
+  data.forEach((rec,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${rec.blok}</td><td>${rec.daire}</td><td>${rec.isim}</td><td>${rec.plaka||""}</td><td><span class="editBtn" data-index="${i}">&#9998;</span></td>`;
+    tableBody.appendChild(tr);
+  });
+}
+function smartSearch(query){
+  query=query.trim().toLowerCase();
+  if(!query) return [];
+  return records.filter(r=>{
+    const full=(r.blok+r.daire).toLowerCase();
+    return r.blok.toLowerCase().includes(query) || r.daire.toLowerCase().includes(query) || full.includes(query) || r.isim.toLowerCase().includes(query) || (r.plaka && r.plaka.toLowerCase().includes(query));
+  });
+}
 searchInput.addEventListener("input",(e)=>renderTable(smartSearch(e.target.value)));
 
+// Voice search
 const voiceSearchBtn=document.getElementById("voiceSearchBtn");
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-
 if(SpeechRecognition){
   const recognition=new SpeechRecognition();
   recognition.lang="tr-TR";
@@ -149,6 +164,7 @@ if(SpeechRecognition){
   recognition.addEventListener("error",e=>{ alert("Sesli arama çalışmadı: "+e.error); });
 }else{ voiceSearchBtn.disabled=true; voiceSearchBtn.title="Tarayıcınız sesli aramayı desteklemiyor."; }
 
+// Password
 function askPassword(callback){
   passwordInput.value="";
   passwordPanel.style.display="block";
@@ -159,13 +175,21 @@ function askPassword(callback){
 }
 function closePasswordPanel(){ passwordPanel.style.display="none"; }
 
+// Admin
 allRecordsBtn.addEventListener("click",()=>askPassword(()=>{ showingAll=!showingAll; allRecordsBtn.textContent=showingAll?"Sorgu Ekranını Gizle":"Tüm Kayıtlar"; searchInput.value=""; renderTable(showingAll?records:[]); noResults.style.display=showingAll&&records.length===0?"block":"none"; }));
-
 adminBtn.addEventListener("click",()=>askPassword(()=>openAdminPanel()));
-
-function openAdminPanel(edit=false){ adminPanel.style.display="block"; if(edit && editingIndex!==null){ const rec=records[editingIndex]; blokInput.value=rec.blok; daireInput.value=rec.daire; isimInput.value=rec.isim; plakaInput.value=rec.plaka||""; deleteBtn.style.display="block"; }else{ blokInput.value=daireInput.value=isimInput.value=plakaInput.value=""; editingIndex=null; deleteBtn.style.display="none"; } }
+function openAdminPanel(edit=false){
+  adminPanel.style.display="block";
+  if(edit && editingIndex!==null){
+    const rec=records[editingIndex];
+    blokInput.value=rec.blok;
+    daireInput.value=rec.daire;
+    isimInput.value=rec.isim;
+    plakaInput.value=rec.plaka||"";
+    deleteBtn.style.display="block";
+  }else{ blokInput.value=daireInput.value=isimInput.value=plakaInput.value=""; editingIndex=null; deleteBtn.style.display="none"; }
+}
 function closeAdminPanel(){ adminPanel.style.display="none"; }
-
 saveBtn.addEventListener("click",()=>{
   const blok=blokInput.value.trim(), daire=daireInput.value.trim(), isim=isimInput.value.trim(), plaka=plakaInput.value.trim();
   if(!blok||!daire||!isim)return alert("Blok, Daire ve İsim boş olamaz.");
@@ -173,18 +197,17 @@ saveBtn.addEventListener("click",()=>{
   localStorage.setItem("guvenlikRecords",JSON.stringify(records));
   updateTotalCount(); renderTable([]); closeAdminPanel(); alert("Kayıt kaydedildi.");
 });
-
 deleteBtn.addEventListener("click",()=>{
   if(editingIndex!==null && confirm("Bu kaydı silmek istiyor musunuz?")){ records.splice(editingIndex,1); localStorage.setItem("guvenlikRecords",JSON.stringify(records)); updateTotalCount(); renderTable([]); closeAdminPanel(); alert("Kayıt silindi."); editingIndex=null; }
 });
-
 tableBody.addEventListener("click",(e)=>{ if(e.target.classList.contains("editBtn")){ editingIndex=Number(e.target.getAttribute("data-index")); askPassword(()=>openAdminPanel(true)); } });
 
-document.getElementById("exportBtn").addEventListener("click",()=>askPassword(()=>{ const blob=new Blob([JSON.stringify(records)],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`guvenlik_kayitlari_${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); }));
-
+// Export/Import
+document.getElementById("exportBtn").addEventListener("click",()=>askPassword(()=>{ const blob=new Blob([JSON.stringify(records)],[type:"application/json"]); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`guvenlik_kayitlari_${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); }));
 document.getElementById("importBtn").addEventListener("click",()=>askPassword(()=>importFile.click()));
 importFile.addEventListener("change",(e)=>{ const file=e.target.files[0]; if(!file)return; const reader=new FileReader(); reader.onload=(evt)=>{ try{ const imported=JSON.parse(evt.target.result); if(Array.isArray(imported)){ records=imported; localStorage.setItem("guvenlikRecords",JSON.stringify(records)); updateTotalCount(); renderTable([]); alert("Kayıtlar başarıyla içe aktarıldı."); }else alert("Geçersiz dosya."); }catch(err){ alert("Dosya okunamadı: "+err.message); } }; reader.readAsText(file); });
 
+// Delete all
 deleteAllBtn.addEventListener("click",()=>{ askPassword(()=>{ const botCheck=prompt("Lütfen 'Ben robot değilim' yazınız:"); if(botCheck && botCheck.trim().toLowerCase()==="ben robot değilim"){ if(confirm("Tüm kayıtları silmek istediğinize emin misiniz?")){ records=[]; localStorage.setItem("guvenlikRecords",JSON.stringify(records)); updateTotalCount(); renderTable([]); alert("Tüm kayıtlar silindi."); } } else alert("Bot doğrulaması başarısız!"); }); });
 
 updateTotalCount(); renderTable([]);
@@ -193,19 +216,18 @@ updateTotalCount(); renderTable([]);
 const cameraBtn=document.getElementById("cameraBtn");
 const cameraModal=document.getElementById("cameraModal");
 const video=cameraModal.querySelector("video");
+const photoImg=cameraModal.querySelector("img");
+const overlay=cameraModal.querySelector(".overlay");
 const takePhotoBtn=document.getElementById("takePhotoBtn");
 let stream=null;
 
 cameraBtn.addEventListener("click",()=>{
   cameraModal.style.display="block";
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-    .then(s=>{
-      stream=s;
-      video.srcObject=stream;
-    })
-    .catch(err=>{
-      alert("Kamera açılamadı: "+err);
-    });
+  video.style.display="block";
+  photoImg.style.display="none";
+  navigator.mediaDevices.getUserMedia({ video:{ facingMode:"environment" } })
+    .then(s=>{ stream=s; video.srcObject=stream; })
+    .catch(err=>{ alert("Kamera açılamadı: "+err); });
 });
 
 function closeCameraModal(){
@@ -214,11 +236,18 @@ function closeCameraModal(){
 }
 
 takePhotoBtn.addEventListener("click",()=>{
+  if(!video.videoWidth) return alert("Video yükleniyor...");
   const canvas=document.createElement("canvas");
   canvas.width=video.videoWidth;
   canvas.height=video.videoHeight;
   canvas.getContext("2d").drawImage(video,0,0,canvas.width,canvas.height);
   const dataURL=canvas.toDataURL("image/png");
+
+  // Fotoğrafı ekranda göster, video durdur
+  video.style.display="none";
+  photoImg.src=dataURL;
+  photoImg.style.display="block";
+  if(stream){ stream.getTracks().forEach(track=>track.stop()); stream=null; }
 
   // OCR ile plaka algıla
   Tesseract.recognize(dataURL,'eng',{logger:m=>console.log(m)})
@@ -226,8 +255,6 @@ takePhotoBtn.addEventListener("click",()=>{
       const plate=text.replace(/\s/g,'').toUpperCase();
       searchInput.value=plate;
       renderTable(smartSearch(plate));
-      closeCameraModal();
-      alert("OCR ile plaka okundu: "+plate);
     });
 });
 </script>
