@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Güvenlik Kayıt Sistemi</title>
+<style>
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f0f2f5;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+  }
+  h1 {
+    text-align: center;
+    color: #004d99;
+    margin-bottom: 40px;
+  }
+  #totalCount {
+    position: fixed;
+    top: 6px;
+    left: 6px;
+    font-weight: 600;
+    font-size: 12px;
+    color: #004d99;
+    background: #d9e7ff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    box-shadow: 0 0 4px rgba(0, 77, 153, 0.2);
+    user-select: none;
+    z-index: 10001;
+  }
+  /* Küçük içe/dışa aktar butonları */
+  #exportContainer {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 6px;
+    z-index: 10001;
+  }
+  #exportContainer button {
+    background: #006699;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    min-width: 80px;
+  }
+  #exportContainer button:hover {
+    background: #004466;
+  }
+  #searchInput {
+    max-width: 550px;
+    margin: 0 auto 20px;
+    display: inline-block;
+    padding: 12px 15px;
+    font-size: 18px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+  #voiceSearchBtn {
+    padding: 12px 15px;
+    font-size: 18px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    background: #006699;
+    color: white;
+    margin-left: 5px;
+  }
+  #voiceSearchBtn:hover {
+    background: #004466;
+  }
+  table {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  th,
+  td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+  }
+  th {
+    background: #004d99;
+    color: white;
+  }
+  tr:hover {
+    background: #f5faff;
+  }
+  #noResults {
+    text-align: center;
+    margin-top: 20px;
+    color: #666;
+  }
+  #buttonContainer {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10000;
+  }
+  #buttonContainer button {
+    background: #006699;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    min-width: 80px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.25s ease;
+  }
+  #buttonContainer button:hover {
+    background: #004466;
+  }
+  /* Kayıtları Sil butonu kırmızı */
+  #deleteAllBtn {
+    background-color: #dc3545 !important;
+    color: white !important;
+  }
+  #deleteAllBtn:hover {
+    background-color: #b52a37 !important;
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px 25px 25px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    z-index: 11000;
+    width: 320px;
+    animation: fadeIn 0.3s;
+  }
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  .modal input {
+    width: 100%;
+    margin: 7px 0 12px;
+    padding: 10px 12px;
+    font-size: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+  }
+  .modal button {
+    margin-top: 5px;
+    padding: 10px;
+    width: 100%;
+    background: #004d99;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+  }
+  .modal button:hover {
+    background: #003366;
+  }
+  .closeBtn {
+    background: #dc3545 !important;
+    margin-top: 10px;
+  }
+  #deleteRecord {
+    background: #ff8800 !important;
+  }
+  .editBtn {
+    cursor: pointer;
+    color: #004d99;
+    font-weight: 700;
+    user-select: none;
+    font-size: 18px;
+  }
+  .editBtn:hover {
+    color: #002244;
+  }
+</style>
+</head>
+<body>
+<h1>Güvenlik Kayıt Sistemi</h1>
+<div id="totalCount">Toplam Kayıt: 0</div>
+
+<!-- Sağ üst: içe/dışa aktar -->
+<div id="exportContainer">
+  <button id="exportBtn">Dışa Aktar</button>
+  <button id="importBtn">İçe Aktar</button>
+  <input type="file" id="importFile" accept=".json" style="display:none" />
+</div>
+
+<!-- Arama ve sesli arama -->
+<div style="text-align:center; margin-bottom:20px;">
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="Blok, Daire, İsim veya Plaka ile ara..."
+  />
+  <button id="voiceSearchBtn" title="Sesli Ara">🎙️</button>
+</div>
+
+<table id="recordTable">
+  <thead>
+    <tr>
+      <th>Blok</th>
+      <th>Daire</th>
+      <th>İsim</th>
+      <th>Plaka</th>
+      <th>İşlem</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+<p id="noResults" style="display: none">Kayıt bulunamadı.</p>
+
+<!-- Alt butonlar: Tüm Kayıtlar, Kayıt Ekle, Kayıtları Sil -->
+<div id="buttonContainer">
+  <button id="allRecordsBtn">Tüm Kayıtlar</button>
+  <button id="adminBtn">Kayıt Ekle</button>
+  <button id="deleteAllBtn">Kayıtları Sil</button>
+</div>
+
+<!-- Admin Panel -->
+<div id="adminPanel" class="modal">
+  <h3 id="adminPanelTitle">Yeni Kayıt Ekle</h3>
+  <input type="text" id="blok" placeholder="Blok (örn: C)" />
+  <input type="text" id="daire" placeholder="Daire No (örn: 23)" />
+  <input type="text" id="isim" placeholder="İsim" />
+  <input type="text" id="plaka" placeholder="Plaka (opsiyonel)" />
+  <button id="saveRecord">Kaydet</button>
+  <button id="deleteRecord" class="closeBtn" style="display: none">Sil</button>
+  <button class="closeBtn" onclick="closeAdminPanel()">Kapat</button>
+</div>
+
+<!-- Şifre Paneli -->
+<div id="passwordPanel" class="modal">
+  <h3 id="passTitle">Şifre Girişi</h3>
+  <input
+    type="password"
+    id="passwordInput"
+    placeholder="Şifre"
+    autocomplete="new-password"
+  />
+  <button id="passwordSubmit">Giriş Yap</button>
+  <button class="closeBtn" onclick="closePasswordPanel()">Kapat</button>
+</div>
+
+<script>
+  let records = JSON.parse(localStorage.getItem("guvenlikRecords") || "[]");
+  let savedPassword = localStorage.getItem("adminPassword") || "";
+  const tableBody = document.querySelector("#recordTable tbody");
+  const searchInput = document.getElementById("searchInput");
+  const noResults = document.getElementById("noResults");
+  const totalCountDiv = document.getElementById("totalCount");
+  const allRecordsBtn = document.getElementById("allRecordsBtn");
+  const adminBtn = document.getElementById("adminBtn");
+  const deleteAllBtn = document.getElementById("deleteAllBtn");
+  const adminPanel = document.getElementById("adminPanel");
+  const blokInput = document.getElementById("blok");
+  const daireInput = document.getElementById("daire");
+  const isimInput = document.getElementById("isim");
+  const plakaInput = document.getElementById("plaka");
+  const saveBtn = document.getElementById("saveRecord");
+  const deleteBtn = document.getElementById("deleteRecord");
+  const importFile = document.getElementById("importFile");
+  const passwordPanel = document.getElementById("passwordPanel");
+  const passwordInput = document.getElementById("passwordInput");
+  const passwordSubmit = document.getElementById("passwordSubmit");
+  let editingIndex = null;
+  let showingAll = false;
+
+  function updateTotalCount() {
+    totalCountDiv.textContent = `Toplam Kayıt: ${records.length}`;
+  }
+  function renderTable(data) {
+    tableBody.innerHTML = "";
+    if (data.length === 0) {
+      noResults.style.display = searchInput.value.trim() ? "block" : "none";
+      return;
+    }
+    noResults.style.display = "none";
+    data.forEach((rec, i) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${rec.blok}</td><td>${rec.daire}</td><td>${rec.isim}</td><td>${
+        rec.plaka || ""
+      }</td><td><span class="editBtn" data-index="${i}">&#9998;</span></td>`;
+      tableBody.appendChild(tr);
+    });
+  }
+  // Gelişmiş arama
+  function smartSearch(query) {
+    query = query.trim().toLowerCase();
+    if (!query) return [];
+    return records.filter((r) => {
+      const full = (r.blok + r.daire).toLowerCase();
+      return (
+        r.blok.toLowerCase().includes(query) ||
+        r.daire.toLowerCase().includes(query) ||
+        full.includes(query) ||
+        r.isim.toLowerCase().includes(query) ||
+        (r.plaka && r.plaka.toLowerCase().includes(query))
+      );
+    });
+  }
+  searchInput.addEventListener("input", (e) =>
+    renderTable(smartSearch(e.target.value))
+  );
+
+  // ** SESLİ ARAMA EKLENDİ **
+  const voiceSearchBtn = document.getElementById("voiceSearchBtn");
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (SpeechRecognition) {
+    const recognition = new SpeechRecognition();
+    recognition.lang = "tr-TR";
+    recognition.interimResults = false;
+
+    voiceSearchBtn.addEventListener("click", () => {
+      recognition.start();
+    });
+
+    recognition.addEventListener("result", (event) => {
+      const spokenText = event.results[0][0].transcript;
+      searchInput.value = spokenText;
+      renderTable(smartSearch(spokenText));
+    });
+
+    recognition.addEventListener("error", (e) => {
+      alert("Sesli arama çalışmadı: " + e.error);
+    });
+  } else {
+    voiceSearchBtn.disabled = true;
+    voiceSearchBtn.title = "Tarayıcınız sesli aramayı desteklemiyor.";
+  }
+
+  // Şifre sorup callback çalıştırma
+  function askPassword(callback) {
+    passwordInput.value = "";
+    passwordPanel.style.display = "block";
+
+    passwordSubmit.onclick = () => {
+      if (!savedPassword) {
+        savedPassword = passwordInput.value;
+        if (!savedPassword) return alert("Şifre boş olamaz!");
+        localStorage.setItem("adminPassword", savedPassword);
+        passwordPanel.style.display = "none";
+        callback();
+      } else {
+        if (passwordInput.value === savedPassword) {
+          passwordPanel.style.display = "none";
+          callback();
+        } else alert("Hatalı şifre!");
+      }
+    };
+  }
+  function closePasswordPanel() {
+    passwordPanel.style.display = "none";
+  }
+
+  allRecordsBtn.addEventListener("click", () =>
+    askPassword(() => {
+      showingAll = !showingAll;
+      allRecordsBtn.textContent = showingAll
+        ? "Sorgu Ekranını Gizle"
+        : "Tüm Kayıtlar";
+      searchInput.value = "";
+      renderTable(showingAll ? records : []);
+      noResults.style.display = showingAll && records.length === 0 ? "block" : "none";
+    })
+  );
+
+  adminBtn.addEventListener("click", () => askPassword(() => openAdminPanel()));
+
+  function openAdminPanel(edit = false) {
+    adminPanel.style.display = "block";
+    if (edit && editingIndex !== null) {
+      const rec = records[editingIndex];
+      blokInput.value = rec.blok;
+      daireInput.value = rec.daire;
+      isimInput.value = rec.isim;
+      plakaInput.value = rec.plaka || "";
+      deleteBtn.style.display = "block";
+    } else {
+      blokInput.value = daireInput.value = isimInput.value = plakaInput.value = "";
+      editingIndex = null;
+      deleteBtn.style.display = "none";
+    }
+  }
+  function closeAdminPanel() {
+    adminPanel.style.display = "none";
+  }
+  saveBtn.addEventListener("click", () => {
+    const blok = blokInput.value.trim(),
+      daire = daireInput.value.trim(),
+      isim = isimInput.value.trim(),
+      plaka = plakaInput.value.trim();
+    if (!blok || !daire || !isim) return alert("Blok, Daire ve İsim boş olamaz.");
+    if (editingIndex !== null) {
+      records[editingIndex] = { blok, daire, isim, plaka };
+      editingIndex = null;
+    } else records.push({ blok, daire, isim, plaka });
+    localStorage.setItem("guvenlikRecords", JSON.stringify(records));
+    updateTotalCount();
+    renderTable([]);
+    closeAdminPanel();
+    alert("Kayıt kaydedildi.");
+  });
+  deleteBtn.addEventListener("click", () => {
+    if (editingIndex !== null && confirm("Bu kaydı silmek istiyor musunuz?")) {
+      records.splice(editingIndex, 1);
+      localStorage.setItem("guvenlikRecords", JSON.stringify(records));
+      updateTotalCount();
+      renderTable([]);
+      closeAdminPanel();
+      alert("Kayıt silindi.");
+      editingIndex = null;
+    }
+  });
+  tableBody.addEventListener("click", (e) => {
+    if (e.target.classList.contains("editBtn")) {
+      editingIndex = Number(e.target.getAttribute("data-index"));
+      askPassword(() => openAdminPanel(true));
+    }
+  });
+
+  // Dışa Aktar (şifreli)
+  document.getElementById("exportBtn").addEventListener("click", () =>
+    askPassword(() => {
+      const blob = new Blob([JSON.stringify(records)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `guvenlik_kayitlari_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    })
+  );
+
+  // İçe Aktar (şifreli)
+  document.getElementById("importBtn").addEventListener("click", () =>
+    askPassword(() => importFile.click())
+  );
+  importFile.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const imported = JSON.parse(evt.target.result);
+        if (Array.isArray(imported)) {
+          records = imported;
+          localStorage.setItem("guvenlikRecords", JSON.stringify(records));
+          updateTotalCount();
+          renderTable([]);
+          alert("Kayıtlar başarıyla içe aktarıldı.");
+        } else alert("Geçersiz dosya.");
+      } catch (err) {
+        alert("Dosya okunamadı: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // Kayıtları Sil butonu (şifre + bot doğrulama + onay)
+  deleteAllBtn.addEventListener("click", () => {
+    askPassword(() => {
+      const botCheck = prompt("Lütfen 'Ben robot değilim' yazınız:");
+      if (botCheck && botCheck.trim().toLowerCase() === "ben robot değilim") {
+        if (confirm("Tüm kayıtları silmek istediğinize emin misiniz?")) {
+          records = [];
+          localStorage.setItem("guvenlikRecords", JSON.stringify(records));
+          updateTotalCount();
+          renderTable([]);
+          alert("Tüm kayıtlar silindi.");
+        }
+      } else alert("Bot doğrulaması başarısız!");
+    });
+  });
+
+  updateTotalCount();
+  renderTable([]);
+</script>
+</body>
+</html>
