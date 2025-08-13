@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Güvenlik  Sistemi</title>
+<title>Güvenlik Kayıt Sistemi</title>
 <style>
   body {
     font-family: 'Segoe UI', sans-serif;
@@ -55,13 +55,26 @@
     background: #004466;
   }
   #searchInput {
-    max-width: 600px;
+    max-width: 550px;
     margin: 0 auto 20px;
-    display: block;
+    display: inline-block;
     padding: 12px 15px;
     font-size: 18px;
     border-radius: 5px;
     border: 1px solid #ccc;
+  }
+  #voiceSearchBtn {
+    padding: 12px 15px;
+    font-size: 18px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    background: #006699;
+    color: white;
+    margin-left: 5px;
+  }
+  #voiceSearchBtn:hover {
+    background: #004466;
   }
   table {
     width: 100%;
@@ -199,11 +212,16 @@
   <input type="file" id="importFile" accept=".json" style="display:none" />
 </div>
 
-<input
-  type="text"
-  id="searchInput"
-  placeholder="Blok, Daire, İsim veya Plaka ile ara..."
-/>
+<!-- Arama ve sesli arama -->
+<div style="text-align:center; margin-bottom:20px;">
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="Blok, Daire, İsim veya Plaka ile ara..."
+  />
+  <button id="voiceSearchBtn" title="Sesli Ara">🎙️</button>
+</div>
+
 <table id="recordTable">
   <thead>
     <tr>
@@ -310,6 +328,34 @@
   searchInput.addEventListener("input", (e) =>
     renderTable(smartSearch(e.target.value))
   );
+
+  // ** SESLİ ARAMA EKLENDİ **
+  const voiceSearchBtn = document.getElementById("voiceSearchBtn");
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (SpeechRecognition) {
+    const recognition = new SpeechRecognition();
+    recognition.lang = "tr-TR";
+    recognition.interimResults = false;
+
+    voiceSearchBtn.addEventListener("click", () => {
+      recognition.start();
+    });
+
+    recognition.addEventListener("result", (event) => {
+      const spokenText = event.results[0][0].transcript;
+      searchInput.value = spokenText;
+      renderTable(smartSearch(spokenText));
+    });
+
+    recognition.addEventListener("error", (e) => {
+      alert("Sesli arama çalışmadı: " + e.error);
+    });
+  } else {
+    voiceSearchBtn.disabled = true;
+    voiceSearchBtn.title = "Tarayıcınız sesli aramayı desteklemiyor.";
+  }
 
   // Şifre sorup callback çalıştırma
   function askPassword(callback) {
@@ -444,7 +490,6 @@
   // Kayıtları Sil butonu (şifre + bot doğrulama + onay)
   deleteAllBtn.addEventListener("click", () => {
     askPassword(() => {
-      // Bot kontrolü basit prompt
       const botCheck = prompt("Lütfen 'Ben robot değilim' yazınız:");
       if (botCheck && botCheck.trim().toLowerCase() === "ben robot değilim") {
         if (confirm("Tüm kayıtları silmek istediğinize emin misiniz?")) {
@@ -462,5 +507,4 @@
   renderTable([]);
 </script>
 </body>
-
 </html>
